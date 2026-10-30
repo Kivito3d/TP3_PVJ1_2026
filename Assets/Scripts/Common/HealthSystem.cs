@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -22,6 +23,8 @@ public class HealthSystem : MonoBehaviour
     private Collider col;
     private Attack attack;
     private MeshRenderer mesh;
+
+    public event Action<float> OnHealthChanged;
     private void Awake() 
     { 
         currentHealth = maxHealth; 
@@ -38,7 +41,10 @@ public class HealthSystem : MonoBehaviour
         currentHealth -= amount;
         //clamp permite normalizar un valor de acuerdo a los limites
         currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
-        
+        if (gameObject.CompareTag("Player"))
+        {
+            OnHealthChanged?.Invoke(currentHealth);
+        }
         /*
          * math.clamp(5, 1, 10) => 5 (esta dentro del rango)
          * math.clamp(-4, 0, 10) => 0 (es menor que el minimo, devuelve 0)

@@ -1,30 +1,34 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
-public enum GameState
-{
-    Start,
-    Playing,
-    Paused,
-    Victory,
-    GameOver,
-}
+
 public class GameManager : MonoBehaviour
 {
+ 
     public static GameManager Instance { get; private set; }
     //static
-
+    public enum GameState
+    {
+        Start,
+        Playing,
+        Paused,
+        Victory,
+        GameOver,
+    }
     //settings
     [Header("State Settings")]
     [SerializeField] private GameState currentState;
+    public GameState CurrentState => currentState;
 
     [Header("Victory Settings")]
     [SerializeField] private EnemyAI[] enemies;
     [SerializeField] private int totalEnemies;
     [SerializeField] private int enemiesRemaining;
 
-    //singleton
+    public event Action<GameState> OnChangeState;
+    public event Action<int> OnEnemyCountChanged;
+
     private void Awake()
     {
         if(Instance ==null)
@@ -39,10 +43,11 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-        //estados iniciales
-        //EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
+
         totalEnemies = enemies.Length;
         enemiesRemaining = totalEnemies;
+
+        OnEnemyCountChanged?.Invoke(enemiesRemaining);
         ChangeState(GameState.Playing);
     }
 
@@ -59,6 +64,8 @@ public class GameManager : MonoBehaviour
     //switch estados
     public void ChangeState(GameState newState)
     {
+        if (currentState == newState && newState != GameState.Playing) return;
+
         currentState = newState;
         switch (currentState)
         {
@@ -72,18 +79,22 @@ public class GameManager : MonoBehaviour
                 break;
             case GameState.Paused:
                 Time.timeScale = 0f;
+                UnlockCursor();
                 Debug.Log("<color=yellow>ESTADO: pausa</color>");
                 break;
             case GameState.Victory:
                 Time.timeScale = 0f;
+                UnlockCursor();
                 //corrutina para detener el tiempo
                 Debug.Log("<color=cyan>ESTADO: Victoria</color>");
                 break;
             case GameState.GameOver:
                 Time.timeScale = 0f;
+                UnlockCursor();
                 Debug.Log("<color=red>ESTADO: Game Over</color>");
                 break;
         }
+        OnChangeState?.Invoke(currentState);
     }
 
     //pausa
@@ -92,11 +103,20 @@ public class GameManager : MonoBehaviour
         if(currentState == GameState.Playing)
         {
             ChangeState(GameState.Paused);
+            
         }
         else if(currentState == GameState.Paused)
         {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
             ChangeState(GameState.Playing);
         }
+    }
+
+    private void UnlockCursor()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     //notificaciones
@@ -113,6 +133,7 @@ public class GameManager : MonoBehaviour
 
         enemiesRemaining--;
 
+        OnEnemyCountChanged?.Invoke(enemiesRemaining);
         if (enemiesRemaining <= 0)
         {
             ChangeState(GameState.Victory);
