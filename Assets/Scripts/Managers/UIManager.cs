@@ -1,4 +1,6 @@
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -12,5 +14,30 @@ public class UIManager : MonoBehaviour
     void Update()
     {
         
+    }
+    public void ChangeScene(SceneAsset scene)
+    {
+        SceneManager.LoadScene(scene.name);
+    }
+    public void TogglePanel(GameObject Panel)
+    {
+        if(Panel !=null)
+        {
+            bool toggle = Panel.activeInHierarchy ? false : true;
+            Panel.SetActive(toggle);
+        }
+    }
+    public void OpenPanel(GameObject panelToOpen)
+    { 
+        // Desactivamos todos los paneles
+        // cargados en memoria 
+
+        // Activamos solo el elgido
+        panelToOpen.SetActive(true);
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }
