@@ -27,10 +27,14 @@ public class CameraFollow : MonoBehaviour
 
     void Update()
     {
-        currentX += Input.GetAxis("Mouse X") * sensitivityX;
-        currentY -= Input.GetAxis("Mouse Y") * sensitivityY;
+        if(GameManager.Instance != null && (GameManager.Instance.CurrentState != GameManager.GameState.Paused))
+        {
+            currentX += Input.GetAxis("Mouse X") * sensitivityX;
+            currentY -= Input.GetAxis("Mouse Y") * sensitivityY;
 
-        currentY = Mathf.Clamp(currentY, minYAngle, maxYAngle);
+            currentY = Mathf.Clamp(currentY, minYAngle, maxYAngle);
+        }
+        
     }
 
     void LateUpdate()
