@@ -142,6 +142,7 @@ public class EnemyAI : MonoBehaviour
     {
         isAttacking = true;
         agent.isStopped = true;
+        Debug.Log("Entro");
         ExecuteAttack();
         yield return new WaitForSeconds(attackCooldown);
         isAttacking = false;

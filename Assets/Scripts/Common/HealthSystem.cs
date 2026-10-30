@@ -6,9 +6,10 @@ public class HealthSystem : MonoBehaviour
 {
 
     [Header("Health Settings")]
-    [SerializeField] private float maxHealth = 100f; 
-    private float currentHealth; 
-    public float CurrentHealth => currentHealth;//usamos getter y setter para el gameManager - solo lectura
+
+    [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private EnemyStats enemyStats;
+
 
     [SerializeField] private bool isDead;
     public bool IsDead
@@ -24,12 +25,13 @@ public class HealthSystem : MonoBehaviour
     private Attack attack;
     private MeshRenderer mesh;
 
-    public event Action<float> OnHealthChanged;
+    public event Action<float> OnChangeHealthPlayer;
     private void Awake() 
     { 
-        currentHealth = maxHealth; 
+        //currentHealth = maxHealth; 
         isDead = false; 
-
+        playerStats.ResetStats();
+        enemyStats.ResetStats();
         rb = GetComponent<Rigidbody>();
         col = GetComponent<Collider>();
         attack = GetComponent<Attack>();
@@ -38,25 +40,29 @@ public class HealthSystem : MonoBehaviour
     public void TakeDamage(float amount)
     {
         if (isDead) return;
-        currentHealth -= amount;
-        //clamp permite normalizar un valor de acuerdo a los limites
-        currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
+
         if (gameObject.CompareTag("Player"))
         {
-            OnHealthChanged?.Invoke(currentHealth);
-        }
-        /*
-         * math.clamp(5, 1, 10) => 5 (esta dentro del rango)
-         * math.clamp(-4, 0, 10) => 0 (es menor que el minimo, devuelve 0)
-         * math.clamp(15, 0, 10) => 10 (es mayor que el maximo, devuelve 10)
-         */
+            playerStats.currentHealth -= amount;
+            OnChangeHealthPlayer?.Invoke(playerStats.currentHealth);
 
-        //Debug.Log($"Salud actual: " + currentHealth);
-        Debug.Log($"Salud actual: {currentHealth}");
-        if (currentHealth <= 0f)
-        {
-            Dead();
+            if (playerStats.currentHealth <= 0f)
+            {
+                Dead();
+            }
         }
+
+        if (gameObject.CompareTag("Character"))
+        {
+            enemyStats.currentHealth -= amount;
+
+            if (enemyStats.currentHealth <= 0f)
+            {
+                Dead();
+            }
+        }
+
+
     }
     private void Dead() 
     { 
