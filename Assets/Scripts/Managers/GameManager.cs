@@ -1,6 +1,7 @@
 using System;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 
 public enum GameState
 {
@@ -15,16 +16,24 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     //static
 
+
     //settings
     [Header("State Settings")]
     [SerializeField] private GameState currentState;
+    public GameState CurrentState => currentState;
 
     [Header("Victory Settings")]
     [SerializeField] private EnemyAI[] enemies;
     [SerializeField] private int totalEnemies;
     [SerializeField] private int enemiesRemaining;
 
-    //singleton
+
+    //eventos estado y cambio total enemigos
+
+    public event Action<GameState> OnChangeState;
+
+    public event Action<int> OnEnemyChange;
+
     private void Awake()
     {
         if(Instance ==null)
@@ -43,6 +52,8 @@ public class GameManager : MonoBehaviour
         //EnemyAI[] enemies = FindObjectsByType<EnemyAI>(FindObjectsSortMode.None);
         totalEnemies = enemies.Length;
         enemiesRemaining = totalEnemies;
+
+        OnEnemyChange?.Invoke(enemiesRemaining);
         ChangeState(GameState.Playing);
     }
 
@@ -59,6 +70,7 @@ public class GameManager : MonoBehaviour
     //switch estados
     public void ChangeState(GameState newState)
     {
+        if (currentState == newState && newState != GameState.Playing) return;
         currentState = newState;
         switch (currentState)
         {
@@ -84,6 +96,8 @@ public class GameManager : MonoBehaviour
                 Debug.Log("<color=red>ESTADO: Game Over</color>");
                 break;
         }
+
+        OnChangeState?.Invoke(currentState);
     }
 
     //pausa
@@ -99,6 +113,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //lockmouse metodo
+
     //notificaciones
     public void NotifyPlayerDead()
     {
@@ -113,17 +129,13 @@ public class GameManager : MonoBehaviour
 
         enemiesRemaining--;
 
+        OnEnemyChange?.Invoke(enemiesRemaining);
+
         if (enemiesRemaining <= 0)
         {
             ChangeState(GameState.Victory);
         }
     }
 
-    public void NotifyGoalZone()
-    {
-        if (currentState != GameState.Playing) return;
-
-        ChangeState(GameState.Victory);
-    }
 
 }
